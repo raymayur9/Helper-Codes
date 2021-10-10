@@ -20,3 +20,9 @@ void preprocess()
         }
     }
 }
+
+// Time complexity for
+// preprocessing using Seive : 𝓞(n log log n)
+// factorisation : 𝓞(n log n)
+
+//Space complexity : 𝓞(n)
