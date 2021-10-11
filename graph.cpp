@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <vector>
 #include <queue>
+#include <stack>
 using namespace std;
 void printGraph(vector<vector<int> > &edges)
 {
@@ -193,6 +194,97 @@ void dfsCheckCycleDG(vector<vector<int> > &edges)
     }
     cout << "NO";
 }
+bool checkBipartiteDFS(vector<vector<int> > &edges, vector<int> &colours, int i, int col)
+{
+    for (int j = 0; j < edges[i].size(); j++)
+    {
+        if (colours[edges[i][j]] == -1)
+        {
+            colours[edges[i][j]] = !col;
+            if (!checkBipartiteDFS(edges, colours, edges[i][j], !col))
+            {
+                return false;
+            }
+        }
+        else if (colours[edges[i][j]] == col)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+bool checkBipartiteBFS(vector<vector<int> > &edges, vector<int> &colours, int node, int col)
+{
+    queue<pair<int, int> > q;
+    q.push(make_pair(node, col));
+    while (!q.empty())
+    {
+        node = q.front().first;
+        col = q.front().second;
+        q.pop();
+        for (int i = 0; i < edges[node].size(); i++)
+        {
+            if (colours[edges[node][i]] == -1)
+            {
+                colours[edges[node][i]] = !col;
+                q.push(make_pair(edges[node][i], !col));
+            }
+            else if (colours[edges[node][i]] == col)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+void bipartite(vector<vector<int> > &edges)
+{
+    vector<int> colours(edges.size(), -1);
+    for (int i = 1; i < edges.size(); i++)
+    {
+        if (colours[i] == -1)
+        {
+            colours[i] = 0;
+            // if (!checkBipartiteDFS(edges, colours, i, 0))
+            if (!checkBipartiteBFS(edges, colours, i, 0))
+            {
+                cout << "Not Bipartite";
+                return;
+            }
+        }
+    }
+    cout << "Bipartite";
+}
+void toposortHelper(vector<vector<int> > &edges, vector<bool> &visited, stack<int> &st, int i)
+{
+    for (int j = 0; j < edges[i].size(); j++)
+    {
+        if (!visited[edges[i][j]])
+        {
+            visited[edges[i][j]] = true;
+            toposortHelper(edges, visited, st, edges[i][j]);
+        }
+    }
+    st.push(i);
+}
+void toposort(vector<vector<int> > &edges) //applicable only for DAG (Directed Acyclic Graph)
+{
+    vector<bool> visited(edges.size(), false);
+    stack<int> st;
+    for (int i = 1; i < edges.size(); i++)
+    {
+        if (!visited[i])
+        {
+            visited[i] = true;
+            toposortHelper(edges, visited, st, i);
+        }
+    }
+    while (!st.empty())
+    {
+        cout << st.top() << " ";
+        st.pop();
+    }
+}
 int main()
 {
     int n, m, u, v;
@@ -202,13 +294,15 @@ int main()
     {
         cin >> u >> v;
         edges[u].push_back(v);
-        // edges[v].push_back(u);
+        // edges[v].push_back(u);              //only for undirected graph
     }
     // printGraph(edges);
     // dfsGraph(edges);
     // bfsGraph(edges);
     // dfsCheckCycle(edges);
     // bfsCheckCycle(edges);
-    dfsCheckCycleDG(edges);
+    // dfsCheckCycleDG(edges);
+    // bipartite(edges);
+    toposort(edges);
     return 0;
 }
