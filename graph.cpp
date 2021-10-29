@@ -267,7 +267,7 @@ void toposortHelper(vector<vector<int> > &edges, vector<bool> &visited, stack<in
     }
     st.push(i);
 }
-void toposort(vector<vector<int> > &edges) //applicable only for DAG (Directed Acyclic Graph)
+void toposort(vector<vector<int> > &edges) // applicable only for DAG (Directed Acyclic Graph)
 {
     vector<bool> visited(edges.size(), false);
     stack<int> st;
@@ -283,6 +283,40 @@ void toposort(vector<vector<int> > &edges) //applicable only for DAG (Directed A
     {
         cout << st.top() << " ";
         st.pop();
+    }
+}
+void toposortBFS(vector<vector<int> > &edges) // Kahn' alhorithm
+{
+    vector<int> inDegree(edges.size(), 0);
+
+    for (int i = 1; i < edges.size(); i++)
+    {
+        for (int j = 0; j < edges[i].size(); j++)
+        {
+            inDegree[edges[i][j]]++;
+        }
+    }
+    queue<int> q;
+    for (int i = 1; i < edges.size(); i++)
+    {
+        if (inDegree[i] == 0)
+        {
+            q.push(i);
+        }
+    }
+    while (!q.empty())
+    {
+        int node = q.front();
+        q.pop();
+        cout << node << " ";
+        for (int j = 0; j < edges[node].size(); j++)
+        {
+            inDegree[edges[node][j]]--;
+            if (inDegree[edges[node][j]] == 0)
+            {
+                q.push(edges[node][j]);
+            }
+        }
     }
 }
 int main()
@@ -303,6 +337,7 @@ int main()
     // bfsCheckCycle(edges);
     // dfsCheckCycleDG(edges);
     // bipartite(edges);
-    toposort(edges);
+    // toposort(edges);
+    toposortBFS(edges);
     return 0;
 }
