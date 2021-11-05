@@ -3,7 +3,7 @@ void primeFactors(ll n)
 	while (n % 2 == 0)
 	{
 		cout << 2 << " ";
-		n = (n >> 1);
+		n = (n >> 1ll);
 	}
 	for (ll i = 3; i <= sqrt(n); i = i + 2)
 	{
