@@ -319,16 +319,155 @@ void toposortBFS(vector<vector<int> > &edges) // Kahn' alhorithm
         }
     }
 }
+
+void bfs0_1(vector<vector<pair<int, int> > > &edges, int source) // applicable for 0/n weights
+{
+    deque<pair<int, int> > dq;
+    vector<int> dis(edges.size(), INT_MAX);
+    dis[source] = 0;
+    dq.push_front(make_pair(source, 0));
+    while (!dq.empty())
+    {
+        int node = dq.front().first;
+        int dist = dq.front().second;
+        dq.pop_front();
+        for (int i = 0; i < edges[node].size(); i++)
+        {
+            int adjNode = edges[node][i].first;
+            int wt = edges[node][i].second;
+            if (dist + wt < dis[adjNode])
+            {
+                dis[adjNode] = dist + wt;
+                if (wt == 1)
+                {
+                    dq.push_back(make_pair(adjNode, dist + wt));
+                }
+                else
+                {
+                    dq.push_front(make_pair(adjNode, dist + wt));
+                }
+            }
+        }
+    }
+    for (int i = 1; i < edges.size(); i++)
+    {
+        cout << dis[i] << " ";
+    }
+}
+
+void djikstra(vector<vector<pair<int, int> > > &edges, int source) // applicable for any weights
+{
+    priority_queue<pair<int, int>, vector<pair<int, int> >, greater<pair<int, int> > > pq;
+    vector<int> dis(edges.size(), INT_MAX);
+    dis[source] = 0;
+    pq.push(make_pair(0, source));
+    while (!pq.empty())
+    {
+        int node = pq.top().second;
+        int dist = pq.top().first;
+        pq.pop();
+        if (dis[node] <= dist)          // check before using
+            continue;
+        for (int i = 0; i < edges[node].size(); i++)
+        {
+            int adjNode = edges[node][i].first;
+            int wt = edges[node][i].second;
+            if (dist + wt < dis[adjNode])
+            {
+                dis[adjNode] = dist + wt;
+                pq.push(make_pair(dist + wt, adjNode));
+            }
+        }
+    }
+    for (int i = 1; i < edges.size(); i++)
+    {
+        cout << dis[i] << " ";
+    }
+}
+
+class DSU
+{
+private:
+    vector<int> parent, size, rank;
+public:
+    DSU(int n)
+    {
+        for (int i = 0; i <= n; i++)
+        {
+            parent.push_back(i);
+            size.push_back(1);
+            rank.push_back(0);
+        }
+        
+    }
+    int findParent(int node)
+    {
+        if (parent[node] == node)
+        {
+            return node;
+        }
+        // path compression -> (log n)
+		// path compression and size -> O(4 x alpha)
+        parent[node] = findParent(parent[node]);
+        return parent[node];
+    }
+    void unionSize(int u, int v)
+    {
+        int pu = findParent(u);
+        int pv = findParent(v);
+        if (pu==pv)
+        {
+            return;
+        }
+        if (size[pu] < size[pv])
+        {
+            parent[pu] = pv;
+            size[pv] += size[pu];
+        }
+        else
+        {
+            parent[pv] = pu;
+            size[pu] += size[pv];
+        }
+    }
+    void unionRank(int u, int v)
+    {
+        int pu = findParent(u);
+        int pv = findParent(v);
+        if (pu==pv)
+        {
+            return;
+        }
+        if (rank[pu] < rank[pv])
+        {
+            parent[pu] = pv;
+        }
+        else if (rank[pv] < rank[pu])
+        {
+            parent[pv] = pu;
+        }
+        else
+        {
+            parent[pu] = pv;
+            rank[pv]++;
+        }
+    }
+};
+
 int main()
 {
-    int n, m, u, v;
+    int n, m, u, v, w;
     cin >> n >> m;
     vector<vector<int> > edges(n + 1);
+    // vector<vector<pair<int, int> > > edges(n+1);    // for weighted graphs
     while (m--)
     {
         cin >> u >> v;
         edges[u].push_back(v);
-        // edges[v].push_back(u);              //only for undirected graph
+        // edges[v].push_back(u);              // only for undirected graph
+        // cin >> w;                           // for weighted graphs
+        // edges[u].push_back(make_pair(v, w));
+        // edges[v].push_back(make_pair(u, w));
     }
     // printGraph(edges);
     // dfsGraph(edges);
@@ -338,6 +477,7 @@ int main()
     // dfsCheckCycleDG(edges);
     // bipartite(edges);
     // toposort(edges);
-    toposortBFS(edges);
+    // toposortBFS(edges);
+    // bfs0_1(edges, 1);
     return 0;
 }
