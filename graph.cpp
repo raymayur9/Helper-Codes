@@ -366,7 +366,7 @@ void djikstra(vector<vector<pair<int, int> > > &edges, int source) // applicable
         int node = pq.top().second;
         int dist = pq.top().first;
         pq.pop();
-        if (dis[node] <= dist)          // check before using
+        if (dis[node] <= dist) // check before using
             continue;
         for (int i = 0; i < edges[node].size(); i++)
         {
@@ -389,6 +389,7 @@ class DSU
 {
 private:
     vector<int> parent, size, rank;
+
 public:
     DSU(int n)
     {
@@ -398,7 +399,6 @@ public:
             size.push_back(1);
             rank.push_back(0);
         }
-        
     }
     int findParent(int node)
     {
@@ -407,7 +407,7 @@ public:
             return node;
         }
         // path compression -> (log n)
-		// path compression and size -> O(4 x alpha)
+        // path compression and size -> O(4 x alpha)
         parent[node] = findParent(parent[node]);
         return parent[node];
     }
@@ -415,7 +415,7 @@ public:
     {
         int pu = findParent(u);
         int pv = findParent(v);
-        if (pu==pv)
+        if (pu == pv)
         {
             return;
         }
@@ -434,7 +434,7 @@ public:
     {
         int pu = findParent(u);
         int pv = findParent(v);
-        if (pu==pv)
+        if (pu == pv)
         {
             return;
         }
@@ -453,6 +453,42 @@ public:
         }
     }
 };
+
+struct edge
+{
+    int u, v, wt;
+    edge(int _u, int _v, int _wt)
+    {
+        u = _u;
+        v = _v;
+        wt = _wt;
+    }
+};
+
+bool comp(edge &e1, edge &e2)
+{
+    return e1.wt < e2.wt;
+}
+
+int kruskal(int n, vector<edge> &edges)
+{
+    sort(edges.begin(), edges.end(), comp);
+
+    DSU dsu(n);
+    int cost = 0;
+    for (int i = 0; i < edges.size(); i++)
+    {
+        int u = edges[i].u;
+        int v = edges[i].v;
+        int wt = edges[i].wt;
+        if (dsu.findParent(u) != dsu.findParent(v))
+        {
+            dsu.unionSize(u, v);
+            cost += wt;
+        }
+    }
+    return cost;
+}
 
 int main()
 {
