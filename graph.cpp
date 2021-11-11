@@ -4,6 +4,7 @@
 #include <queue>
 #include <stack>
 using namespace std;
+
 void printGraph(vector<vector<int> > &edges)
 {
     for (int i = 1; i < edges.size(); i++)
@@ -16,6 +17,7 @@ void printGraph(vector<vector<int> > &edges)
         cout << endl;
     }
 }
+
 void dfs(vector<vector<int> > &edges, vector<bool> &visited, int i)
 {
     cout << i << " ";
@@ -41,6 +43,7 @@ void dfsGraph(vector<vector<int> > &edges)
         }
     }
 }
+
 void bfs(vector<vector<int> > &edges, vector<bool> &visited, int i)
 {
     queue<int> q;
@@ -73,6 +76,7 @@ void bfsGraph(vector<vector<int> > &edges)
         }
     }
 }
+
 bool dfsCycle(vector<vector<int> > &edges, vector<bool> &visited, int node, int parent)
 {
     for (int i = 0; i < edges[node].size(); i++)
@@ -110,6 +114,7 @@ void dfsCheckCycle(vector<vector<int> > &edges)
     }
     cout << "NO";
 }
+
 bool bfsCycle(vector<vector<int> > &edges, vector<bool> &visited, int node, int parent)
 {
     queue<pair<int, int> > q;
@@ -152,6 +157,7 @@ void bfsCheckCycle(vector<vector<int> > &edges)
     }
     cout << "NO";
 }
+
 bool dfsCycleDG(vector<vector<int> > &edges, vector<bool> &visited, vector<bool> &path, int node)
 {
     for (int i = 0; i < edges[node].size(); i++)
@@ -194,6 +200,7 @@ void dfsCheckCycleDG(vector<vector<int> > &edges)
     }
     cout << "NO";
 }
+
 bool checkBipartiteDFS(vector<vector<int> > &edges, vector<int> &colours, int i, int col)
 {
     for (int j = 0; j < edges[i].size(); j++)
@@ -213,6 +220,7 @@ bool checkBipartiteDFS(vector<vector<int> > &edges, vector<int> &colours, int i,
     }
     return true;
 }
+
 bool checkBipartiteBFS(vector<vector<int> > &edges, vector<int> &colours, int node, int col)
 {
     queue<pair<int, int> > q;
@@ -255,6 +263,7 @@ void bipartite(vector<vector<int> > &edges)
     }
     cout << "Bipartite";
 }
+
 void toposortHelper(vector<vector<int> > &edges, vector<bool> &visited, stack<int> &st, int i)
 {
     for (int j = 0; j < edges[i].size(); j++)
@@ -285,6 +294,7 @@ void toposort(vector<vector<int> > &edges) // applicable only for DAG (Directed 
         st.pop();
     }
 }
+
 void toposortBFS(vector<vector<int> > &edges) // Kahn' alhorithm
 {
     vector<int> inDegree(edges.size(), 0);
@@ -355,7 +365,7 @@ void bfs0_1(vector<vector<pair<int, int> > > &edges, int source) // applicable f
     }
 }
 
-void djikstra(vector<vector<pair<int, int> > > &edges, int source) // applicable for any weights
+void djikstra(vector<vector<pair<int, int> > > &edges, int source) // applicable for any non-negative weights
 {
     priority_queue<pair<int, int>, vector<pair<int, int> >, greater<pair<int, int> > > pq;
     vector<int> dis(edges.size(), INT_MAX);
@@ -490,11 +500,80 @@ int kruskal(int n, vector<edge> &edges)
     return cost;
 }
 
+int timer = 0;
+void dfsBridges(vector<vector<int> > &edges, vector<int> &in, vector<int> &low, int node, int parent)
+{
+    in[node] = low[node] = timer;
+    timer++;
+    for (int i = 0; i < edges[node].size(); i++)
+    {
+        int adj = edges[node][i];
+        if (adj == parent)
+        {
+            continue;
+        }
+
+        if (in[adj] != -1)
+        {
+            low[node] = min(low[node], low[adj]);
+        }
+        else
+        {
+            dfsBridges(edges, in, low, adj, node);
+            if (low[adj] > in[node])
+            {
+                cout << node << " -> " << adj << endl;
+            }
+            low[node] = min(low[node], low[adj]);
+        }
+    }
+}
+void bridges(vector<vector<int> > &edges)
+{
+    vector<int> in(edges.size(), -1), low(edges.size(), -1);
+    dfsBridges(edges, in, low, 1, -1);
+}
+
+void bellmanFord(int n, vector<edge> &edges) // for negative cycles
+{
+    vector<int> dist(n + 1, INT_MAX);
+    for (int i = 0; i < n - 1; i++)
+    {
+        for (int i = 0; i < edges.size(); i++)
+        {
+            int u = edges[i].u;
+            int v = edges[i].v;
+            int wt = edges[i].wt;
+            if (dist[u] + wt < dist[v])
+            {
+                dist[v] = dist[u] + wt;
+            }
+        }
+    }
+
+    for (int i = 0; i < edges.size(); i++)
+    {
+        int u = edges[i].u;
+        int v = edges[i].v;
+        int wt = edges[i].wt;
+        if (dist[u] + wt < dist[v])
+        {
+            dist[v] = dist[u] + wt;
+            cout << "Exists a cycle\n";
+            return;
+        }
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        cout << dist[i] << " ";
+    }
+}
+
 int main()
 {
     int n, m, u, v, w;
     cin >> n >> m;
-    vector<vector<int> > edges(n + 1);
+    vector<vector<int> > edges(n + 1); // adjacency matrix
     // vector<vector<pair<int, int> > > edges(n+1);    // for weighted graphs
     while (m--)
     {
