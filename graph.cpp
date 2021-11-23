@@ -3,6 +3,7 @@
 #include <vector>
 #include <queue>
 #include <stack>
+#include <set>
 using namespace std;
 
 void printGraph(vector<vector<int> > &edges)
@@ -295,7 +296,7 @@ void toposort(vector<vector<int> > &edges) // applicable only for DAG (Directed 
     }
 }
 
-void toposortBFS(vector<vector<int> > &edges) // Kahn' alhorithm
+void toposortBFS(vector<vector<int> > &edges) // Kahn's alhorithm
 {
     vector<int> inDegree(edges.size(), 0);
 
@@ -500,8 +501,7 @@ int kruskal(int n, vector<edge> &edges)
     return cost;
 }
 
-int timer = 0;
-void dfsBridges(vector<vector<int> > &edges, vector<int> &in, vector<int> &low, int node, int parent)
+void dfsBridges(vector<vector<int> > &edges, vector<int> &in, vector<int> &low, int node, int parent, int &timer)
 {
     in[node] = low[node] = timer;
     timer++;
@@ -519,7 +519,7 @@ void dfsBridges(vector<vector<int> > &edges, vector<int> &in, vector<int> &low, 
         }
         else
         {
-            dfsBridges(edges, in, low, adj, node);
+            dfsBridges(edges, in, low, adj, node, timer);
             if (low[adj] > in[node])
             {
                 cout << node << " -> " << adj << endl;
@@ -531,7 +531,8 @@ void dfsBridges(vector<vector<int> > &edges, vector<int> &in, vector<int> &low, 
 void bridges(vector<vector<int> > &edges)
 {
     vector<int> in(edges.size(), -1), low(edges.size(), -1);
-    dfsBridges(edges, in, low, 1, -1);
+    int timer = 0;
+    dfsBridges(edges, in, low, 1, -1, timer);
 }
 
 void bellmanFord(int n, vector<edge> &edges) // for negative cycles
@@ -566,6 +567,56 @@ void bellmanFord(int n, vector<edge> &edges) // for negative cycles
     for (int i = 1; i <= n; i++)
     {
         cout << dist[i] << " ";
+    }
+}
+
+void dfsCutpoints(vector<vector<int> > &edges, vector<int> &in, vector<int> &low, int node, int parent, int &timer, set<int> &points)
+{
+    in[node] = low[node] = timer++;
+    int children = 0;
+    for (int i = 0; i < edges[node].size(); i++)
+    {
+        int adj = edges[node][i];
+        if (adj == parent)
+        {
+            continue;
+        }
+
+        if (in[adj] != -1)
+        {
+            low[node] = min(low[node], low[adj]);
+        }
+        else
+        {
+            children++;
+            dfsCutpoints(edges, in, low, adj, node, timer, points);
+            if (low[adj] >= in[node] && parent != -1)
+            {
+                points.insert(node);
+            }
+            low[node] = min(low[node], low[adj]);
+        }
+    }
+    if (parent == -1 && children > 1)
+    {
+        points.insert(node);
+    }
+}
+void cutpoints(vector<vector<int> > &edges) // or articulation points
+{
+    vector<int> in(edges.size(), -1), low(edges.size(), -1);
+    set<int> points;
+    int timer = 0;
+    for (int i = 1; i < edges.size(); i++)
+    {
+        if (in[i] == -1)
+        {
+            dfsCutpoints(edges, in, low, 1, -1, timer, points);
+        }
+    }
+    for (set<int>::iterator it = points.begin(); it != points.end(); it++)
+    {
+        cout << *it << " ";
     }
 }
 
