@@ -21,3 +21,5 @@ ll nCr(ll n, ll r)
         p = 1;
     return p;
 }
+
+// Time complexity : 𝓞(r log n)
