@@ -540,11 +540,11 @@ void bellmanFord(int n, vector<edge> &edges) // for negative cycles
     vector<int> dist(n + 1, INT_MAX);
     for (int i = 0; i < n - 1; i++)
     {
-        for (int i = 0; i < edges.size(); i++)
+        for (int j = 0; j < edges.size(); j++)
         {
-            int u = edges[i].u;
-            int v = edges[i].v;
-            int wt = edges[i].wt;
+            int u = edges[j].u;
+            int v = edges[j].v;
+            int wt = edges[j].wt;
             if (dist[u] + wt < dist[v])
             {
                 dist[v] = dist[u] + wt;
@@ -620,6 +620,276 @@ void cutpoints(vector<vector<int> > &edges) // or articulation points
     }
 }
 
+void dfsSort(vector<vector<int> > &adj, vector<bool> &visited, int node, stack<int> &st)
+{
+    for (int i = 0; i < adj[node].size(); i++)
+    {
+        int adjNode = adj[node][i];
+        if (!visited[adjNode])
+        {
+            visited[adjNode] = true;
+            dfsSort(adj, visited, adjNode, st);
+        }
+    }
+    st.push(node);
+}
+void revDFS(vector<vector<int> > &transpose, vector<bool> &visited, int node)
+{
+    cout << node << " ";
+    for (int i = 0; i < transpose[node].size(); i++)
+    {
+        int adjNode = transpose[node][i];
+        if (!visited[adjNode])
+        {
+            visited[adjNode] = true;
+            revDFS(transpose, visited, adjNode);
+        }
+    }
+}
+void scc(vector<vector<int> > &adj) // Kosaraju's algo
+{
+    vector<bool> visited(adj.size(), false);
+    stack<int> st;
+
+    // stores in stack with decreasing order of out-time (from top to bottom)
+    for (int i = 1; i < adj.size(); i++)
+    {
+        if (!visited[i])
+        {
+            visited[i] = true;
+            dfsSort(adj, visited, i, st);
+        }
+    }
+
+    // creating transpose graph
+    vector<vector<int> > transpose(adj.size());
+    for (int i = 1; i < adj.size(); i++)
+    {
+        visited[i] = false;
+        for (int j = 0; j < adj[i].size(); j++)
+        {
+            transpose[adj[i][j]].push_back(i);
+        }
+    }
+
+    // finding SCCs
+    while (!st.empty())
+    {
+        int node = st.top();
+        st.pop();
+        if (!visited[node])
+        {
+            visited[node] = true;
+            revDFS(transpose, visited, node);
+            cout << endl;
+        }
+    }
+}
+
+void dfsTarjan(vector<vector<int> > &adj, vector<bool> &visited, vector<bool> &onStack, vector<int> &in, vector<int> &low, stack<int> &st, int node, int &timer)
+{
+    in[node] = low[node] = timer;
+    timer++;
+    onStack[node] = true;
+    st.push(node);
+
+    for (int i = 0; i < adj[node].size(); i++)
+    {
+        int adjNode = adj[node][i];
+        if (visited[adjNode] && onStack[adjNode])
+        {
+            low[node] = min(low[node], in[adjNode]);
+        }
+        else if (!visited[adjNode])
+        {
+            visited[adjNode] = true;
+            dfsTarjan(adj, visited, onStack, in, low, st, adjNode, timer);
+            if (onStack[adjNode])
+            {
+                low[node] = min(low[node], low[adjNode]);
+            }
+        }
+    }
+
+    if (in[node] == low[node])
+    {
+        int u;
+        while (1)
+        {
+            u = st.top();
+            st.pop();
+            onStack[u] = false;
+            cout << u << " ";
+            if (u == node)
+            {
+                break;
+            }
+        }
+        cout << '\n';
+    }
+}
+void tarjan(vector<vector<int> > &adj)
+{
+    vector<bool> visited(adj.size(), false), onStack(adj.size(), false);
+    vector<int> in(adj.size(), -1), low(adj.size(), -1);
+    stack<int> st;
+    int timer = 0;
+    for (int i = 1; i < adj.size(); i++)
+    {
+        if (!visited[i])
+        {
+            visited[i] = true;
+            dfsTarjan(adj, visited, onStack, in, low, st, i, timer);
+        }
+    }
+}
+
+bool dfsPrintCycle(vector<vector<int> > &edges, vector<bool> &visited, int node, int parent, vector<int> &ans)
+{
+    ans.push_back(node);
+    for (int i = 0; i < edges[node].size(); i++)
+    {
+        if (!visited[edges[node][i]])
+        {
+            visited[edges[node][i]] = true;
+            if (dfsPrintCycle(edges, visited, edges[node][i], node, ans))
+            {
+                return true;
+            }
+        }
+        else if (edges[node][i] != parent)
+        {
+            ans.push_back(edges[node][i]);
+            return true;
+        }
+    }
+    ans.pop_back();
+    return false;
+}
+void printCycle(vector<vector<int> > &edges)
+{
+    vector<bool> visited(edges.size(), false);
+    vector<int> ans;
+    for (int i = 1; i < edges.size(); i++)
+    {
+        if (!visited[i])
+        {
+            visited[i] = true;
+            if (dfsPrintCycle(edges, visited, i, 0, ans))
+            {
+                cout << "YES\n";
+                int sz = ans.size();
+                vector<int> final;
+                final.push_back(ans[sz - 1]);
+                for (int i = sz - 2; i >= 0; i--)
+                {
+                    final.push_back(ans[i]);
+                    if (ans[i] == ans[sz - 1])
+                    {
+                        break;
+                    }
+                }
+                cout << final.size() << '\n';
+                for (int j = 0; j < final.size(); j++)
+                {
+                    cout << final[j] << " ";
+                }
+                return;
+            }
+        }
+    }
+    cout << "NO";
+}
+
+void dfsLCA(vector<vector<int> > &adj, vector<int> &depth, vector<int> &parent, int node, int par)
+{
+    depth[node] = depth[par] + 1;
+    parent[node] = par;
+    for (int i = 0; i < adj[node].size(); i++)
+    {
+        if (adj[node][i] != par)
+        {
+            dfsLCA(adj, depth, parent, adj[node][i], node);
+        }
+    }
+}
+int lca(vector<vector<int> > &adj, vector<int> &depth, vector<int> &parent, int u, int v)
+{
+    if (depth[v] < depth[u])
+    {
+        swap(u, v);
+    }
+    int diff = depth[v] - depth[u];
+    while (diff--)
+    {
+        v = parent[v];
+    }
+    if (u == v)
+    {
+        return u;
+    }
+    while (parent[u] != parent[v])
+    {
+        u = parent[u], v = parent[v];
+    }
+    return parent[u];
+}
+
+void dfsLCA2(vector<vector<int> > &adj, vector<int> &depth, vector<vector<int> > &parent, int node, int par)
+{
+    depth[node] = depth[par] + 1;
+    parent[node][0] = par;
+    for (int i = 0; i < adj[node].size(); i++)
+    {
+        if (adj[node][i] != par)
+        {
+            dfsLCA2(adj, depth, parent, adj[node][i], node);
+        }
+    }
+}
+void precomputeSparseMatrix(vector<vector<int> > &parent, int level)
+{
+    for (int i = 1; i < level; i++)
+    {
+        for (int node = 1; node < parent.size(); node++)
+        {
+            if (parent[node][i - 1] != -1)
+            {
+                parent[node][i] = parent[parent[node][i - 1]][i - 1];
+            }
+        }
+    }
+}
+int lca2(vector<vector<int> > &adj, vector<int> &depth, vector<vector<int> > &parent, int level, int u, int v)
+{
+    if (depth[v] < depth[u])
+    {
+        swap(u, v);
+    }
+    int diff = depth[v] - depth[u];
+    for (int i = 0; i < level; i++)
+    {
+        if ((diff >> i) & 1)
+        {
+            v = parent[v][i];
+        }
+    }
+
+    if (u == v)
+    {
+        return u;
+    }
+    for (int i = level - 1; i >= 0; i--)
+    {
+        if (parent[u][i] != parent[v][i])
+        {
+            u = parent[u][i], v = parent[v][i];
+        }
+    }
+
+    return parent[u][0];
+}
+
 int main()
 {
     int n, m, u, v, w;
@@ -645,5 +915,12 @@ int main()
     // toposort(edges);
     // toposortBFS(edges);
     // bfs0_1(edges, 1);
+    // scc(edges);
+    // tarjan(edges);
+
+    // vector<int> depth(n+1, 0), parent(n+1);
+    // dfsLCA(edges, depth, parent, 1, 0);
+    // lca(edges, depth, parent, 4, 10);
+
     return 0;
 }
