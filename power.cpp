@@ -2,7 +2,7 @@ ll power(ll x, ll y)
 {
     ll res = 1;
 
-    x = x % mod;
+    x %= mod;
 
     if (x == 0)
         return 0;
