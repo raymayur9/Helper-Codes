@@ -43,7 +43,7 @@ public:
     {
         if (low == high)
         {
-            seg[low] = val;
+            seg[idx] = val;
             return;
         }
         ll mid = (low + high) / 2;
